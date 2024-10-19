@@ -13,61 +13,25 @@ export class AppService {
     });
   }
 
-  // Upload file
   async uploadFile(file: Express.Multer.File) {
     const bucketName = this.configService.get<string>('aws_bucket_name');
-
     const timestamp = new Date().getTime();
+
     const params = {
       Bucket: bucketName,
       Key: `${timestamp}-${file.originalname}`,
       Body: file.buffer,
-      ContentType: file.mimetype, // Specify the content type
+      ContentType: file.mimetype,
     };
 
     try {
       const data = await this.s3.upload(params).promise();
       return data;
     } catch (error: any) {
-      throw new Error(`Error uploading file: ${error?.message}`);
+      throw new Error('Error while uploading file');
     }
   }
 
-  // Get file
-  async getFile(key: string) {
-    const bucketName = this.configService.get<string>('aws_bucket_name');
-
-    const params = {
-      Bucket: bucketName,
-      Key: key,
-      Expires: 60, // Expiry time in seconds, default is 60 seconds
-    };
-
-    try {
-      const signedUrl = await this.s3.getSignedUrlPromise('getObject', params);
-      return { url: signedUrl }; // Returns the pre-signed URL for accessing the file
-    } catch (error) {
-      throw new Error('Error generating signed URL for file');
-    }
-  }
-
-  // Delete file
-  async deleteFile(key: string) {
-    const bucketName = this.configService.get<string>('aws_bucket_name');
-    const params = {
-      Bucket: bucketName,
-      Key: key,
-    };
-
-    try {
-      await this.s3.deleteObject(params).promise();
-      return { message: 'File deleted successfully' };
-    } catch (error) {
-      throw new Error('Error deleting file');
-    }
-  }
-
-  // List files
   async listFiles() {
     const bucketName = this.configService.get<string>('aws_bucket_name');
     const params = {
@@ -77,9 +41,41 @@ export class AppService {
 
     try {
       const data = await this.s3.listObjectsV2(params).promise();
-      return data.Contents;
+      return data;
     } catch (error) {
-      throw new Error('Error listing files');
+      throw new Error('Error while listing file');
+    }
+  }
+
+  async getFileByName(key: string) {
+    const bucketName = this.configService.get<string>('aws_bucket_name');
+
+    const params = {
+      Bucket: bucketName,
+      Key: key,
+      Expires: 60,
+    };
+
+    try {
+      const signedUrl = await this.s3.getSignedUrlPromise('getObject', params);
+      return { url: signedUrl };
+    } catch (error) {
+      throw new Error('Error while generating url');
+    }
+  }
+
+  async deleteFile(key: string) {
+    const bucketName = this.configService.get<string>('aws_bucket_name');
+    const params = {
+      Bucket: bucketName,
+      Key: key,
+    };
+
+    try {
+      await this.s3.deleteObject(params).promise();
+      return { message: 'file deleted successfully' };
+    } catch (error) {
+      throw new Error('Error while deleting file');
     }
   }
 }

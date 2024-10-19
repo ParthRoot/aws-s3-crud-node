@@ -1,5 +1,4 @@
 import {
-  Body,
   Controller,
   Delete,
   Get,
@@ -14,26 +13,26 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 
 @Controller()
 export class AppController {
-  constructor(private readonly s3Service: AppService) {}
+  constructor(private readonly appService: AppService) {}
 
   @Post('')
-  @UseInterceptors(FileFieldsInterceptor([{ name: 'file', maxCount: 20 }]))
+  @UseInterceptors(FileFieldsInterceptor([{ name: 'file', maxCount: 1 }]))
   async uploadFile(@UploadedFiles() files: any) {
-    return await this.s3Service.uploadFile(files.file[0]);
-  }
-
-  @Get('/:key')
-  async getFile(@Param('key') key: string) {
-    return await this.s3Service.getFile(key);
-  }
-
-  @Delete('/:key')
-  async deleteFile(@Param('key') key: string) {
-    return await this.s3Service.deleteFile(key);
+    return await this.appService.uploadFile(files.file[0]);
   }
 
   @Get()
   async listFiles() {
-    return await this.s3Service.listFiles();
+    return await this.appService.listFiles();
+  }
+
+  @Get('/:key')
+  async getFile(@Param('key') key: string) {
+    return await this.appService.getFileByName(key);
+  }
+
+  @Delete('/:key')
+  async deleteFile(@Param('key') key: string) {
+    return await this.appService.deleteFile(key);
   }
 }
